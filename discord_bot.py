@@ -68,26 +68,6 @@ async def on_thread_create(thread):
     except Exception as e:
         logger.error(f'Error sending welcome message to new thread: {e}')
 
-@bot.command(name='threadinfo')
-async def thread_info(ctx):
-    """Command to show information about the current thread."""
-    if isinstance(ctx.channel, discord.Thread):
-        thread = ctx.channel
-        embed = discord.Embed(
-            title="Thread Information",
-            color=discord.Color.blue()
-        )
-        embed.add_field(name="Thread Name", value=thread.name, inline=True)
-        embed.add_field(name="Thread ID", value=thread.id, inline=True)
-        embed.add_field(name="Parent Channel", value=thread.parent.name, inline=True)
-        embed.add_field(name="Created At", value=thread.created_at.strftime("%Y-%m-%d %H:%M:%S"), inline=True)
-        embed.add_field(name="Message Count", value=thread.message_count, inline=True)
-        embed.add_field(name="Is Archived", value=thread.archived, inline=True)
-        
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send("This command can only be used in threads!")
-
 async def main():
     """Main function to run the bot."""
     try:

@@ -1,5 +1,6 @@
 # Environment variables
 .env
+credentials.json
 
 # Python
 __pycache__/
@@ -53,3 +54,6 @@ logs/
 
 # Discord bot specific
 bot_data/
+
+# Google Sheets credentials
+credentials.json

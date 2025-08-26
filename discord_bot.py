@@ -3,6 +3,7 @@ from discord.ext import commands
 import asyncio
 import logging
 from config import BOT_TOKEN, BOT_PREFIX, BOT_DESCRIPTION
+from google_sheets_service import sheets_service
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -59,6 +60,19 @@ async def on_thread_create(thread):
             logger.info(f'Set thread "{thread.name}" to private (invitable=False).')
     except Exception as e:
         logger.error(f'Error making thread private: {e}')
+
+    try:
+        success = sheets_service.insert_thread_record(
+            lead_id=str(thread.id)
+        )
+        
+        if success:
+            logger.info(f'Successfully recorded thread "{thread.name}" in Google Sheets')
+        else:
+            logger.warning(f'Failed to record thread "{thread.name}" in Google Sheets')
+            
+    except Exception as e:
+        logger.error(f'Error recording thread in Google Sheets: {e}')
 
     # Optionally send a welcome message to new threads
     try:

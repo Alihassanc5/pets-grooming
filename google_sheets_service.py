@@ -60,13 +60,6 @@ class GoogleSheetsService:
                 lead_id,        # A: lead_id
                 pet_id,         # B: pet_id
                 "initiated",    # C: status
-                "",            # D: pet_name
-                "",            # E: species
-                "",            # F: breed
-                "",            # G: weight_kg
-                "",            # H: age_years
-                "",            # I: coat_condition
-                ""             # J: notes
             ]
             
             # Define the range (append to the end of the sheet)

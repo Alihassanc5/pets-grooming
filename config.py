@@ -16,4 +16,3 @@ BOT_DESCRIPTION = "A Discord bot that responds to thread messages related to pet
 # Google Sheets configuration
 GOOGLE_SHEETS_CREDENTIALS_FILE = os.getenv('GOOGLE_SHEETS_CREDENTIALS_FILE', 'credentials.json')
 SPREADSHEET_ID = os.getenv('GOOGLE_SPREADSHEET_ID')
-WORKSHEET_NAME = os.getenv('GOOGLE_WORKSHEET_NAME', 'Sheet1')

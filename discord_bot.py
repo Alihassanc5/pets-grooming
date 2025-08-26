@@ -3,8 +3,10 @@ from discord.ext import commands
 import asyncio
 import logging
 from config import BOT_TOKEN, BOT_PREFIX, BOT_DESCRIPTION
-from google_sheets_service import sheets_service
-
+from google_sheet_service import goole_sheet_service
+from sheet_structures import SheetType
+import random
+import string
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('discord_bot')
@@ -62,8 +64,14 @@ async def on_thread_create(thread):
         logger.error(f'Error making thread private: {e}')
 
     try:
-        success = sheets_service.insert_thread_record(
-            lead_id=str(thread.id)
+        pet_id = "PET" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        success = goole_sheet_service.insert_record(
+            SheetType.PETS,
+            {
+                "lead_id": str(thread.id),
+                "pet_id": pet_id,
+                "status": "initiated"
+            }
         )
         
         if success:

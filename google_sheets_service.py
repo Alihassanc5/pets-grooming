@@ -13,8 +13,8 @@ class GoogleSheetsService:
     def __init__(self):
         self.credentials = None
         self.service = None
-        self.spreadsheet_id = "1Mfkt8d5xua0-7zcNF5OpkdSBjputGOxf8D_hL_lLl3M"
-        self.worksheet_name = "Sheet1"
+        self.spreadsheet_id = SPREADSHEET_ID
+        self.worksheet_name = WORKSHEET_NAME
         
         if not self.spreadsheet_id:
             logger.warning("Google Spreadsheet ID not configured. Google Sheets integration will be disabled.")
@@ -54,16 +54,23 @@ class GoogleSheetsService:
             return False
         
         try:
-            # Prepare the data row
+            # Prepare the data row with all columns
             pet_id = "PET" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             row_data = [
-                lead_id,
-                pet_id,
-                "initiated",
+                lead_id,        # A: lead_id
+                pet_id,         # B: pet_id
+                "initiated",    # C: status
+                "",            # D: pet_name
+                "",            # E: species
+                "",            # F: breed
+                "",            # G: weight_kg
+                "",            # H: age_years
+                "",            # I: coat_condition
+                ""             # J: notes
             ]
             
             # Define the range (append to the end of the sheet)
-            range_name = f"{self.worksheet_name}!A:G"
+            range_name = f"{self.worksheet_name}!A:J"
             
             # Prepare the request body
             body = {
@@ -90,15 +97,33 @@ class GoogleSheetsService:
             logger.error(f"Error inserting thread record: {e}")
             return False
     
-    def update_thread_status(self, lead_id, new_status):
-        """Update the status of an existing thread record."""
+    def update_thread_record(self, lead_id, **kwargs):
+        """
+        Update thread record fields. Only lead_id is required, all other fields are optional.
+        
+        Args:
+            lead_id (str): The lead ID to update (required)
+            **kwargs: Optional fields to update:
+                - pet_name (str): Pet's name
+                - species (str): Pet species
+                - breed (str): Pet breed
+                - weight_kg (float/str): Weight in kg
+                - age_years (float/str): Age in years
+                - coat_condition (str): Coat condition
+                - notes (str): Additional notes
+                - status (str): Status of the record
+        """
         if not self.service or not self.spreadsheet_id:
-            logger.warning("Google Sheets service not available. Skipping status update.")
+            logger.warning("Google Sheets service not available. Skipping record update.")
+            return False
+        
+        if not lead_id:
+            logger.error("lead_id is required for updating thread record")
             return False
         
         try:
             # Find the row with the lead_id
-            range_name = f"{self.worksheet_name}!A:F"
+            range_name = f"{self.worksheet_name}!A:J"
             result = self.service.spreadsheets().values().get(
                 spreadsheetId=self.spreadsheet_id,
                 range=range_name
@@ -117,40 +142,59 @@ class GoogleSheetsService:
                     break
             
             if row_index is None:
-                logger.warning(f"Thread ID {lead_id} not found in spreadsheet")
+                logger.warning(f"Lead ID {lead_id} not found in spreadsheet")
                 return False
             
-            # Update the status column (column F, which is index 5)
-            range_name = f"{self.worksheet_name}!F{row_index}"
-            body = {
-                'values': [[new_status]]
+            # Define column mappings (0-based index)
+            column_mapping = {
+                'pet_name': 'D',      # Column D (index 3)
+                'species': 'E',       # Column E (index 4)
+                'breed': 'F',         # Column F (index 5)
+                'weight_kg': 'G',     # Column G (index 6)
+                'age_years': 'H',     # Column H (index 7)
+                'coat_condition': 'I', # Column I (index 8)
+                'notes': 'J',         # Column J (index 9)
+                'status': 'C'         # Column C (index 2)
             }
             
-            result = self.service.spreadsheets().values().update(
-                spreadsheetId=self.spreadsheet_id,
-                range=range_name,
-                valueInputOption='RAW',
-                body=body
-            ).execute()
+            # Update each provided field
+            for field_name, value in kwargs.items():
+                if field_name in column_mapping:
+                    column_letter = column_mapping[field_name]
+                    range_name = f"{self.worksheet_name}!{column_letter}{row_index}"
+                    
+                    body = {
+                        'values': [[str(value)]]
+                    }
+                    
+                    result = self.service.spreadsheets().values().update(
+                        spreadsheetId=self.spreadsheet_id,
+                        range=range_name,
+                        valueInputOption='RAW',
+                        body=body
+                    ).execute()
+                    
+                    logger.info(f"Successfully updated {field_name} for lead {lead_id}: {value}")
+                else:
+                    logger.warning(f"Unknown field '{field_name}' provided for update")
             
-            logger.info(f"Successfully updated thread {lead_id} status to: {new_status}")
             return True
             
         except HttpError as e:
-            logger.error(f"HTTP error occurred while updating thread status: {e}")
+            logger.error(f"HTTP error occurred while updating thread record: {e}")
             return False
         except Exception as e:
-            logger.error(f"Error updating thread status: {e}")
+            logger.error(f"Error updating thread record: {e}")
             return False
     
-    def get_thread_status(self, lead_id):
-        """Get the current status of a thread."""
+    def get_thread_record(self, lead_id):
+        """Get the complete thread record by lead_id."""
         if not self.service or not self.spreadsheet_id:
-            logger.warning("Google Sheets service not available. Cannot get thread status.")
+            logger.warning("Google Sheets service not available. Cannot get thread record.")
             return None
         
         try:
-            range_name = f"{self.worksheet_name}!A:F"
+            range_name = f"{self.worksheet_name}!A:J"
             result = self.service.spreadsheets().values().get(
                 spreadsheetId=self.spreadsheet_id,
                 range=range_name
@@ -162,16 +206,31 @@ class GoogleSheetsService:
             
             # Find the row with matching lead_id
             for row in values:
-                if row and str(row[0]) == str(lead_id) and len(row) > 5:
-                    return row[5]  # Status is in column F (index 5)
+                if row and str(row[0]) == str(lead_id):
+                    # Ensure the row has enough columns, pad with empty strings if needed
+                    while len(row) < 10:
+                        row.append("")
+                    
+                    return {
+                        'lead_id': row[0],
+                        'pet_id': row[1],
+                        'status': row[2],
+                        'pet_name': row[3],
+                        'species': row[4],
+                        'breed': row[5],
+                        'weight_kg': row[6],
+                        'age_years': row[7],
+                        'coat_condition': row[8],
+                        'notes': row[9]
+                    }
             
             return None
             
         except HttpError as e:
-            logger.error(f"HTTP error occurred while getting thread status: {e}")
+            logger.error(f"HTTP error occurred while getting thread record: {e}")
             return None
         except Exception as e:
-            logger.error(f"Error getting thread status: {e}")
+            logger.error(f"Error getting thread record: {e}")
             return None
 
 # Create a global instance

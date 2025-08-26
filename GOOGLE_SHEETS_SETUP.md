@@ -7,13 +7,16 @@ This guide will help you set up Google Sheets integration for the Discord bot to
 - A Google account
 - A Google Cloud Project
 - A Google Sheet with the following columns:
-  - A: Thread ID
-  - B: Thread Name
-  - C: Channel Name
-  - D: Creator Name
-  - E: Creator ID
-  - F: Status
-  - G: Created At
+  - A: lead_id
+  - B: pet_id
+  - C: status
+  - D: pet_name
+  - E: species
+  - F: breed
+  - G: weight_kg
+  - H: age_years
+  - I: coat_condition
+  - J: notes
 
 ## Step 1: Create a Google Cloud Project
 
@@ -48,13 +51,16 @@ This guide will help you set up Google Sheets integration for the Discord bot to
 1. Create a new Google Sheet or use an existing one
 2. Set up the following columns in the first row:
    ```
-   A1: Thread ID
-   B1: Thread Name
-   C1: Channel Name
-   D1: Creator Name
-   E1: Creator ID
-   F1: Status
-   G1: Created At
+   A1: lead_id
+   B1: pet_id
+   C1: status
+   D1: pet_name
+   E1: species
+   F1: breed
+   G1: weight_kg
+   H1: age_years
+   I1: coat_condition
+   J1: notes
    ```
 3. Copy the Spreadsheet ID from the URL:
    - The URL looks like: `https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit`
@@ -97,13 +103,16 @@ pip install -r requirements.txt
 
 2. Create a new thread in Discord
 3. Check your Google Sheet - you should see a new row with:
-   - Thread ID
-   - Thread Name
-   - Channel Name
-   - Creator Name
-   - Creator ID
-   - Status: "initiated"
-   - Created At timestamp
+   - lead_id (Discord thread ID)
+   - pet_id (auto-generated PET code)
+   - status: "initiated"
+   - pet_name (empty)
+   - species (empty)
+   - breed (empty)
+   - weight_kg (empty)
+   - age_years (empty)
+   - coat_condition (empty)
+   - notes (empty)
 
 ## Troubleshooting
 
@@ -135,26 +144,43 @@ pip install -r requirements.txt
 
 The `GoogleSheetsService` class provides these methods:
 
-- `insert_thread_record()` - Add a new thread record
-- `update_thread_status()` - Update thread status
-- `get_thread_status()` - Get current thread status
+- `insert_thread_record(lead_id)` - Add a new thread record
+- `update_thread_record(lead_id, **kwargs)` - Update any field(s) in a thread record
+- `get_thread_record(lead_id)` - Get complete thread record
 
 ## Example Usage
 
 ```python
-# Insert a new thread record
-sheets_service.insert_thread_record(
-    thread_id="123456789",
-    thread_name="Pet Grooming Request",
-    channel_name="general",
-    creator_name="John Doe",
-    creator_id="987654321"
+# Insert a new thread record (automatically done when thread is created)
+sheets_service.insert_thread_record(lead_id="123456789")
+
+# Update pet information
+sheets_service.update_thread_record(
+    lead_id="123456789",
+    pet_name="Max",
+    species="Dog",
+    breed="Golden Retriever",
+    weight_kg=25.5,
+    age_years=3,
+    coat_condition="Good - needs brushing",
+    notes="Customer prefers gentle grooming"
 )
 
-# Update thread status
-sheets_service.update_thread_status("123456789", "completed")
+# Update just one field
+sheets_service.update_thread_record(
+    lead_id="123456789",
+    status="completed"
+)
 
-# Get thread status
-status = sheets_service.get_thread_status("123456789")
-print(f"Thread status: {status}")
+# Get complete thread record
+record = sheets_service.get_thread_record("123456789")
+print(f"Pet name: {record['pet_name']}")
+print(f"Status: {record['status']}")
 ```
+
+## Discord Bot Commands
+
+The bot also provides Discord commands for updating records:
+
+- `!update <lead_id> pet_name:Max species:Dog breed:Golden Retriever` - Update multiple fields
+- `!get <lead_id>` - Get complete pet information

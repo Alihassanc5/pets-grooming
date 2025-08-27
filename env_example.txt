@@ -8,3 +8,8 @@ DISCORD_BOT_TOKEN=YOUR_BOT_TOKEN_HERE
 GOOGLE_SHEETS_CREDENTIALS_FILE=credentials.json
 GOOGLE_SPREADSHEET_ID=YOUR_SPREADSHEET_ID_HERE
 GOOGLE_WORKSHEET_NAME=Threads
+
+# Google Calendar Configuration
+GOOGLE_CALENDAR_ID=primary
+# Use 'primary' for the main calendar, or provide a specific calendar ID
+# To find your calendar ID, go to Google Calendar settings and look for "Calendar ID"

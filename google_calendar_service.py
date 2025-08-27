@@ -67,7 +67,7 @@ class GoogleCalendarService:
         """
         if not self.service:
             logger.warning("Google Calendar service not available.")
-            return False, []
+            return False, "Google Calendar service not available."
         
         try:
             # Parse date and time
@@ -114,7 +114,7 @@ class GoogleCalendarService:
                           customer_name: str, 
                           service_type: str = "Pet Grooming",
                           notes: str = "",
-                          end_time: str = None) -> Optional[str]:
+                          end_time: str = None) -> Tuple[bool, str]:
         """
         Create a 1-hour appointment in Google Calendar.
         

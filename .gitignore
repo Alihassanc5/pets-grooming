@@ -1,6 +1,8 @@
 # Environment variables
 .env
 credentials.json
+calendar_credentials.json
+token.json
 
 # Python
 __pycache__/

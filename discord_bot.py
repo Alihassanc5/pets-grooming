@@ -3,10 +3,7 @@ from discord.ext import commands
 import asyncio
 import logging
 from config import BOT_TOKEN, BOT_PREFIX, BOT_DESCRIPTION
-from google_sheet_service import goole_sheet_service
-from sheet_structures import SheetType
-import random
-import string
+from workflow_graph import workflow_manager
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('discord_bot')
@@ -36,10 +33,18 @@ async def on_message(message):
         logger.info(f'Received message in thread "{message.channel.name}": {message.content}')
         
         try:
-            await message.channel.send("This is a response from bot.")
+            # Process message through LangGraph workflow
+            response = await workflow_manager.process_message(
+                message=message.content,
+                lead_id=str(message.channel.id),
+                discord_user_id=str(message.author.id)
+            )
+            
+            await message.channel.send(response)
             logger.info(f'Responded to message in thread "{message.channel.name}"')
         except Exception as e:
             logger.error(f'Error responding to message in thread: {e}')
+            await message.channel.send("I'm sorry, I encountered an error. Please try again or contact support.")
     elif not message.author.bot:
         await message.channel.send("Please start a new thread using /thread command to get started.")
 
@@ -64,27 +69,20 @@ async def on_thread_create(thread):
         logger.error(f'Error making thread private: {e}')
 
     try:
-        pet_id = "PET" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        success = goole_sheet_service.insert_record(
-            SheetType.PETS,
-            {
-                "lead_id": str(thread.id),
-                "pet_id": pet_id,
-                "status": "initiated"
-            }
+        # Initialize conversation state for the new thread
+        workflow_manager.get_or_create_state(
+            lead_id=str(thread.id),
+            discord_user_id=str(thread.owner_id) if thread.owner_id else "unknown"
         )
+        logger.info(f'Initialized conversation state for thread "{thread.name}"')
         
-        if success:
-            logger.info(f'Successfully recorded thread "{thread.name}" in Google Sheets')
-        else:
-            logger.warning(f'Failed to record thread "{thread.name}" in Google Sheets')
-            
     except Exception as e:
-        logger.error(f'Error recording thread in Google Sheets: {e}')
+        logger.error(f'Error initializing conversation state: {e}')
 
-    # Optionally send a welcome message to new threads
+    # Send a welcome message to new threads
     try:
-        welcome_message = f"Welcome to the thread! I'm here to help. Send any message and I'll respond with static text."
+        welcome_message = ("🐾 Welcome to our pet grooming service! I'm here to help you get your furry friend "
+                          "looking their best. To get started, just tell me about you and your pet!")
         await thread.send(welcome_message)
         logger.info(f'Sent welcome message to new thread "{thread.name}"')
     except Exception as e:

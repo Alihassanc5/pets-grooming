@@ -34,11 +34,10 @@ SHEET_STRUCTURES = {
         fields=[
             FieldDefinition("lead_id", "A"),
             FieldDefinition("pet_id", "B"),
-            FieldDefinition("status", "C"),
-            FieldDefinition("pet_name", "D"),
-            FieldDefinition("species", "E"),
-            FieldDefinition("breed", "F"),
-            FieldDefinition("weight_kg", "G"),
+            FieldDefinition("pet_name", "C"),
+            FieldDefinition("species", "D"),
+            FieldDefinition("breed", "E"),
+            FieldDefinition("weight_kg", "F"),
             FieldDefinition("age_years", "H"),
             FieldDefinition("coat_condition", "I"),
             FieldDefinition("notes", "J"),
@@ -49,7 +48,7 @@ SHEET_STRUCTURES = {
         name="Leads",
         fields=[
             FieldDefinition("lead_id", "A"),
-            FieldDefinition("created_at", "B"),
+            FieldDefinition("created_at_iso", "B"),
             FieldDefinition("source", "C"),
             FieldDefinition("discord_user_id", "D"),
             FieldDefinition("name", "E"),
@@ -76,11 +75,10 @@ SHEET_STRUCTURES = {
     SheetType.APPOINTMENTS: SheetStructure(
         name="Appointments",
         fields=[
-            FieldDefinition("appointment_id", "A"),
-            FieldDefinition("lead_id", "B"),
+            FieldDefinition("lead_id", "A"),
+            FieldDefinition("appointment_id", "B"),
             FieldDefinition("service_id", "C"),
             FieldDefinition("meeting_link", "D"),
-            FieldDefinition("status", "E"),
         ]
     ),
     
